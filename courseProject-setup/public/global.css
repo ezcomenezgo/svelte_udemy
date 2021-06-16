@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Lato|Roboto+Slab');
+
+* {
+  box-sizing: border-box;
+}
+
 html, body {
 	position: relative;
 	width: 100%;
