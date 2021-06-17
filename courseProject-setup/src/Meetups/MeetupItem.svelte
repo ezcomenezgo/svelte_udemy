@@ -1,10 +1,32 @@
 <script>
+  import Button from '../UI/Button.svelte'
+
   export let title
   export let subtitle
   export let src
   export let description
   export let address
+  export let email
 </script>
+
+<article>
+  <header>
+    <h1>{title}</h1>
+    <h2>{subtitle}</h2>
+    <p>{address}</p>
+  </header>
+  <div class="image">
+    <img {src} alt={title} />
+  </div>
+  <div class="content">
+    {description}
+  </div>
+  <footer>
+    <Button href="mailto:{email}" caption="Contact" />
+    <Button type="button" caption="Show Details" />
+    <Button type="button" caption="Favorite" />
+  </footer>
+</article>
 
 <style>
   article {
@@ -34,7 +56,7 @@
   h1 {
     font-size: 1.25rem;
     margin: 0.5rem 0;
-    font-family: "Roboto Slab", sans-serif;
+    font-family: 'Roboto Slab', sans-serif;
   }
 
   h1.is-favorite {
@@ -58,21 +80,8 @@
   div {
     text-align: right;
   }
-</style>
 
-<article>
-  <header>
-    <h1>{title}</h1>
-    <h2>{subtitle}</h2>
-  </header>
-  <div class="image">
-    <img src={src} alt={title}>
-  </div>
-  <div class="content">
-    {description}
-  </div>
-  <footer>
-    <button>Show Details</button>
-    <button>Favorite</button>
-  </footer>
-</article>
+  .content {
+    height: 4rem;
+  }
+</style>
