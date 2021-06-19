@@ -1,16 +1,10 @@
 <script>
   import Header from './UI/Header.svelte'
   import MeetupGrid from './Meetups/MeetupGrid.svelte'
-  import TextInput from './UI/TextInput.svelte'
   import Button from './UI/Button.svelte'
+  import EditMeetup from './Meetups/EditMeetup.svelte'
 
-  let title = ''
-  let subtitle = ''
-  let description = ''
-  let imageUrl = ''
-  let address = ''
-  let email = ''
-
+  let show = false
   let meetups = [
     {
       id: 'm1',
@@ -22,6 +16,7 @@
         'https://addicted2success.com/wp-content/uploads/2018/06/8-Reasons-You-Should-Join-a-Meetup-Group-Today.jpg',
       address: '45th Nerd Road, 648902 Taiwan',
       contactEmail: 'code@test.com',
+      isFavorite: false
     },
     {
       id: 'm2',
@@ -32,83 +27,59 @@
         'https://i0.wp.com/images-prod.healthline.com/hlcmsresource/images/topic_centers/2019-1/baby_swimming-1200x628-header.jpg?w=1155',
       address: '77th Water Road, 648902 Taiwan',
       contactEmail: 'swim@test.com',
+      isFavorite: false
     },
   ]
 
-  function addMeetup() {
+  function addMeetup(event) {
     const newMeetup = {
       id: Math.random().toString,
-      title: title,
-      subtitle: subtitle,
-      description: description,
-      imageUrl: imageUrl,
-      address: address,
-      contactEmail: email,
+      title: event.detail.title,
+      subtitle: event.detail.subtitle,
+      description: event.detail.description,
+      imageUrl: event.detail.imageUrl,
+      address: event.detail.address,
+      contactEmail: event.detail.email,
     }
 
     meetups = [newMeetup, ...meetups]
+
+    show = false
+  }
+
+  function toggleFavorite(event) {
+    const id = event.detail
+    const updateMeetup = {...meetups.find(m => m.id === id)} // create a new meetup object instead of mutate the original meetup object
+    updateMeetup.isFavorite = !updateMeetup.isFavorite
+    const meetupIndex = meetups.findIndex(m => m.id === id) // find the toggled item's index in meetups array
+    const updatedMeetups = [...meetups] // copy the entire meetups array
+    updatedMeetups[meetupIndex] = updateMeetup // replace the mutated meetup item(updateMeetup) in the copied array(updateMeetups)
+    meetups = updatedMeetups // overwrite the meetups array
+  }
+
+  function cancelEdit() {
+    show = false
   }
 </script>
-
-<Header />
-
-<main>
-  <form on:submit|preventDefault={addMeetup}>
-    <TextInput
-      id="title"
-      label="Title"
-      value={title}
-      type="text"
-      on:input={(e) => (title = e.target.value)}
-    />
-    <TextInput
-      id="subtitle"
-      label="Subtitle"
-      value={subtitle}
-      type="text"
-      on:input={(e) => (subtitle = e.target.value)}
-    />
-    <TextInput
-      id="imageUrl"
-      label="Image Url"
-      value={imageUrl}
-      type="text"
-      on:input={(e) => (imageUrl = e.target.value)}
-    />
-    <TextInput
-      id="address"
-      label="Address"
-      value={address}
-      type="text"
-      on:input={(e) => (address = e.target.value)}
-    />
-    <TextInput
-      id="email"
-      label="Email"
-      value={email}
-      type="email"
-      on:input={(e) => (email = e.target.value)}
-    />
-    <TextInput
-      id="description"
-      label="Description"
-      value={description}
-      controlType="textarea"
-      on:input={(e) => (description = e.target.value)}
-    />
-    <Button type="submit" caption="Save" />
-  </form>
-  <MeetupGrid {meetups} />
-</main>
 
 <style>
   main {
     margin-top: 5rem;
   }
 
-  form {
-    width: 30rem;
-    max-width: 90%;
-    margin: auto;
+  .meetup-controls {
+    margin: 1rem;
   }
 </style>
+
+<Header />
+
+<main>
+  <div class="meetup-controls"></div>
+  <Button on:click={() => show = true}>Create A Meetup</Button>
+  {#if show}
+  <EditMeetup on:save={addMeetup} on:cancel={cancelEdit}/>
+  {/if}
+  <MeetupGrid {meetups} on:togglefavorite={toggleFavorite}/>
+</main>
+
