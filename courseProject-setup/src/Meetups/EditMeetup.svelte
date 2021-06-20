@@ -1,9 +1,12 @@
 <script>
+  import meetups from './meetups-store'
   import { createEventDispatcher } from 'svelte'
   import Button from '../UI/Button.svelte'
   import TextInput from '../UI/TextInput.svelte'
   import Modal from '../UI/Modal.svelte'
   import { isEmpty, isValidEmail } from '../helpers/validation'
+
+  export let id = null
 
   let title = ''
   let subtitle = ''
@@ -11,6 +14,20 @@
   let imageUrl = ''
   let address = ''
   let email = ''
+
+  if(id) {
+   const unsubscribe = meetups.subscribe(items => {
+      const selectedMeetup = items.find(i => i.id === id)
+      title = selectedMeetup.title
+      subtitle = selectedMeetup.subtitle
+      description = selectedMeetup.description
+      imageUrl = selectedMeetup.imageUrl
+      address = selectedMeetup.address
+      email = selectedMeetup.contactEmail
+    })
+
+    unsubscribe() // 馬上 unsubscribe 掉避免在更新表格的時候會出錯
+  }
 
   const dispatch  = createEventDispatcher()
 
@@ -23,14 +40,25 @@
   $: formIsValid = titleValid && subtitleValid && descriptionValid && imageUrlValid && addressValid && emailValid
 
   function submitForm() {
-    dispatch('save', {
+    const meetupData = {
       title: title,
       subtitle: subtitle,
       description: description,
       imageUrl: imageUrl,
       address: address,
-      email: email
-    })
+      contactEmail: email,
+    }
+    if(id) {
+      meetups.updateMeetup(id, meetupData)
+    } else {
+      meetups.addMeetup(meetupData) 
+    }
+    dispatch('save')
+  }
+
+  function deleteMeetup() {
+    meetups.removeMeetup(id)
+    dispatch('save')
   }
 
   function cancelForm () {
@@ -100,5 +128,8 @@
   <div slot="footer">
     <Button type="submit" mode="outline" on:click={cancelForm}>Cancel</Button>
     <Button type="submit" on:click={submitForm} disabled={!formIsValid}>Save</Button>
+    {#if id}
+      <Button on:click={deleteMeetup}>Delete</Button>
+    {/if}
   </div>
 </Modal>
