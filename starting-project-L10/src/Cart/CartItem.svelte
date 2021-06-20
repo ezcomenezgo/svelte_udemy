@@ -1,19 +1,36 @@
 <script>
+  import { products } from "../Products/products-store"
   import Button from "../UI/Button.svelte";
+  import cartItem from "../Cart/cart-store"
+import Product from "../Products/Product.svelte";
 
   export let title;
   export let price;
   export let id;
 
   let showDescription = false;
+  let description = 'Not avaliable!'
+  // let fetchProducts = []
 
-  function displayDescription() {
+  // products.subscribe(prods => {
+  //   fetchProducts = prods
+  //   // console.log(fetchProducts)
+  // })
+
+  function displayDescription(id) {
     showDescription = !showDescription;
+    // description = fetchProducts.find(product => product.id === id).description
+    const unsubscribe = products.subscribe(prods => {
+      description = prods.find(product => product.id === id).description
+    })
+    unsubscribe()
   }
 
-  function removeFromCart() {
-    // ...
-    console.log("Removing...");
+  function removeFromCart(id) {
+    cartItem.update(items => {
+      return items.filter(item => item.id !== id)
+    })
+    console.log("Removing...")
   }
 </script>
 
@@ -41,11 +58,11 @@
 <li>
   <h1>{title}</h1>
   <h2>{price}</h2>
-  <Button mode="outline" on:click={displayDescription}>
+  <Button mode="outline" on:click={displayDescription(id)}>
     {showDescription ? 'Hide Description' : 'Show Description'}
   </Button>
-  <Button on:click={removeFromCart}>Remove from Cart</Button>
+  <Button on:click={removeFromCart(id)}>Remove from Cart</Button>
   {#if showDescription}
-    <p>Not available :(</p>
+    <p>{description}</p>
   {/if}
 </li>
