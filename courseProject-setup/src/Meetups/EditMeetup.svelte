@@ -15,9 +15,9 @@
   let address = ''
   let email = ''
 
-  if(id) {
-   const unsubscribe = meetups.subscribe(items => {
-      const selectedMeetup = items.find(i => i.id === id)
+  if (id) {
+    const unsubscribe = meetups.subscribe((items) => {
+      const selectedMeetup = items.find((i) => i.id === id)
       title = selectedMeetup.title
       subtitle = selectedMeetup.subtitle
       description = selectedMeetup.description
@@ -29,7 +29,7 @@
     unsubscribe() // 馬上 unsubscribe 掉避免在更新表格的時候會出錯
   }
 
-  const dispatch  = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
   $: titleValid = !isEmpty(title) // 如果有輸入有效的文字，isEmpty function 會返回 false，所以用驚嘆號把它變成 true
   $: subtitleValid = !isEmpty(subtitle)
@@ -37,7 +37,13 @@
   $: imageUrlValid = !isEmpty(imageUrl)
   $: addressValid = !isEmpty(address)
   $: emailValid = isValidEmail(email)
-  $: formIsValid = titleValid && subtitleValid && descriptionValid && imageUrlValid && addressValid && emailValid
+  $: formIsValid =
+    titleValid &&
+    subtitleValid &&
+    descriptionValid &&
+    imageUrlValid &&
+    addressValid &&
+    emailValid
 
   function submitForm() {
     const meetupData = {
@@ -48,31 +54,68 @@
       address: address,
       contactEmail: email,
     }
-    if(id) {
-      meetups.updateMeetup(id, meetupData)
+    if (id) {
+      fetch(
+        `https://svelte-course-aa75b-default-rtdb.firebaseio.com/meetup/${id}.json`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(meetupData),
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('An err occuerred')
+          }
+          meetups.updateMeetup(id, meetupData)
+        })
+        .catch((err) => console.log(err))
     } else {
-      meetups.addMeetup(meetupData) 
+      fetch(
+        'https://svelte-course-aa75b-default-rtdb.firebaseio.com/meetup.json',
+        {
+          method: 'POST',
+          body: JSON.stringify({ ...meetupData, isFavorite: false }),
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('An err occuerred')
+          }
+          return res.json()
+        })
+        .then((data) => {
+          meetups.addMeetup({ ...meetupData, isFavorite: false, id: data.name })
+        })
+        .catch((err) => console.log(err))
     }
     dispatch('save')
   }
 
   function deleteMeetup() {
-    meetups.removeMeetup(id)
+    fetch(
+      `https://svelte-course-aa75b-default-rtdb.firebaseio.com/meetup/${id}.json`,
+      {
+        method: 'DELETE',
+      }
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('An err occuerred')
+        }
+        meetups.removeMeetup(id)
+      })
+      .catch((err) => console.log(err))
     dispatch('save')
   }
 
-  function cancelForm () {
+  function cancelForm() {
     dispatch('cancel')
   }
 </script>
 
-<style>
-   form {
-    width: 100%;
-  }
-</style>
-
-<Modal title='Create A New Meetup!' on:cancel>
+<Modal title="Create A New Meetup!" on:cancel>
   <form on:submit|preventDefault={submitForm}>
     <TextInput
       id="title"
@@ -127,9 +170,17 @@
   </form>
   <div slot="footer">
     <Button type="submit" mode="outline" on:click={cancelForm}>Cancel</Button>
-    <Button type="submit" on:click={submitForm} disabled={!formIsValid}>Save</Button>
+    <Button type="submit" on:click={submitForm} disabled={!formIsValid}
+      >Save</Button
+    >
     {#if id}
       <Button on:click={deleteMeetup}>Delete</Button>
     {/if}
   </div>
 </Modal>
+
+<style>
+  form {
+    width: 100%;
+  }
+</style>
