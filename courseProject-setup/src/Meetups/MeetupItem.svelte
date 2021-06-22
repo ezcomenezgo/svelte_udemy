@@ -3,6 +3,7 @@
   import meetups from './meetups-store'
   import Button from '../UI/Button.svelte'
   import Badge from '../UI/Badge.svelte'
+  import LoadingSpinner from '../UI/LoadingSpinner.svelte'
 
   export let id
   export let title
@@ -28,12 +29,16 @@
       }
     )
       .then((res) => {
+        isLoading = false
         if (!res.ok) {
           throw new Error('An err occuerred')
         }
         isLoading
       })
-      .catch((err) => console.log(err))
+      .catch((err) => {
+        isLoading = false
+        console.log(err)
+      })
     meetups.toggleFavorite(id) // use meetups store to call the function
   }
 </script>
@@ -61,13 +66,18 @@
     </Button>
     <!-- <Button href="mailto:{email}">Contact</Button> -->
     <Button on:click={() => dispatch('showDetails', id)}>Show Details</Button>
-    <Button
-      mode="outline"
-      color={isFav ? null : 'success'}
-      on:click={toggleFavorite}
-    >
-      {isFav ? 'Unfavorite' : 'Favorite'}
-    </Button>
+    {#if isLoading}
+      <!-- <LoadingSpinner /> -->
+      <span>Changing...</span>
+    {:else}
+      <Button
+        mode="outline"
+        color={isFav ? null : 'success'}
+        on:click={toggleFavorite}
+      >
+        {isFav ? 'Unfavorite' : 'Favorite'}
+      </Button>
+    {/if}
   </footer>
 </article>
 
